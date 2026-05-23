@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Smart Poultry</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="userstyle.css">
+</head>
+<body class="welcome-body">
+<br></br>
+  <div class="welcome-container">
+    <div class="welcome-card">
+      <div class="bg-overlay"></div>
+
+      <!-- Restricted badge -->
+      <div class="access-badge"><span class="dot"></span> Authorised Access</div>
+
+      <!-- Header -->
+      <h1>🐔 Smart Poultry Monitor</h1>
+      <p class="login-tagline">Farm Management Dashboard</p>
+
+      <!-- Fields -->
+      <div class="field-group">
+
+        <div class="field-wrap">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="e.g. manager@poultry.com"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="field-wrap">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') login()"
+            required
+          />
+        </div>
+
+
+
+      </div>
+
+      <!-- Button -->
+      <button class="enter-btn" id="loginBtn" onclick="login()">
+        Login
+      </button>
+    <br></br>
+        <div style="margin-top:-8px; margin-bottom:8px; text-align:right;">
+          <a href="reset-password.html" style="font-size:12px; color:#64748b; text-decoration:none;">
+            Forgot password?
+          </a>
+        </div>
+      <!-- Message -->
+      <p id="errorMsg"></p>
+
+      <!-- Divider + Admin portal link -->
+      <div class="divider"><hr /><span>admin?</span><hr /></div>
+      <a class="admin-link" href="admin.html">🔐 Go to Administrator Portal</a>
+
+      <!-- Footer -->
+      <p class="login-footer">Access restricted to registered farm personnel only</p>
+
+    </div>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+
+
+</body>
+</html>

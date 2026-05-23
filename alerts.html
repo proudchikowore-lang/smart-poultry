@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerts — Poultry Monitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="alertstyle.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container">
+      <h1>
+    <span>🐔</span>
+    <span class="animated-text">POULTRY HOUSE SMART MONITORING</span>
+</h1>
+      <label class="theme-toggle">
+        <input type="checkbox" id="themeSwitch">
+        <span class="toggle-label">🌙</span>
+      </label>
+      <button id="logoutBtn" class="export-btn">Logout</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+
+      <div class="alerts-header">
+        <h2>🔔 Alerts &amp; Notifications</h2>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="realtime-badge"><span class="pulse"></span>Live monitoring</span>
+          <button class="export-btn" onclick="exportAlerts()">📥 Export Log</button>
+          <button class="export-btn" onclick="clearAll()">🗑 Clear All</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-bubble">
+          <div class="num num-danger" id="countDanger">0</div>
+          <div class="lbl">Critical alerts</div>
+        </div>
+        <div class="stat-bubble">
+          <div class="num num-warning" id="countWarning">0</div>
+          <div class="lbl">Warnings</div>
+        </div>
+        <div class="stat-bubble">
+          <div class="num num-ok" id="countTotal">0</div>
+          <div class="lbl">Total logged</div>
+        </div>
+        <div class="stat-bubble">
+          <div class="num" id="lastAlertTime" style="font-size:14px;margin-top:6px">--</div>
+          <div class="lbl">Last alert time</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <button class="filter-btn active-all active" id="filterAll"     onclick="setFilter('all')">All</button>
+        <button class="filter-btn" id="filterDanger"  onclick="setFilter('danger')">🚨 Critical</button>
+        <button class="filter-btn" id="filterWarning" onclick="setFilter('warning')">⚠️ Warning</button>
+        <button class="filter-btn" id="filterInfo"    onclick="setFilter('info')">ℹ️ Info</button>
+      </div>
+
+      <!-- Alert list -->
+      <div class="alert-list" id="alertList">
+        <div class="no-alerts">
+          <span class="big-icon">✅</span>
+          No alerts yet. Live monitoring is active.
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer"><p>© 2026 Smart Poultry Dashboard</p></footer>
+  <audio id="alarmSound" src="https://www.soundjay.com/buttons/beep-07.wav"></audio>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script type="module" src="auth-check.js"></script>
+  <script>
+    const firebaseConfig = { databaseURL: "https://poutry-6dd09-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Theme
+    const themeSwitch = document.getElementById('themeSwitch');
+    function applyTheme(isLight) {
+      document.body.classList.toggle('light', isLight);
+      themeSwitch.checked = isLight;
+      document.querySelector('.toggle-label').textContent = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    applyTheme(localStorage.getItem('theme') === 'light');
+    themeSwitch.addEventListener('change', () => applyTheme(themeSwitch.checked));
+
+    // Alert store
+    let alerts = JSON.parse(localStorage.getItem('alertLog') || '[]');
+    let currentFilter = 'all';
+
+const thresholds = () => JSON.parse(localStorage.getItem('thresholds') || 'null') ||
+      { tempMin:15, tempMax:35, humMin:40, humMax:80, lightMin:20, lightMax:100, feedMin:10, feedMax:100, waterMin:20, waterMax:100 };
+
+    function addAlert(type, icon, title, detail) {
+      const a = { id: Date.now(), type, icon, title, detail, time: new Date().toLocaleString() };
+      alerts.unshift(a);
+      if (alerts.length > 200) alerts = alerts.slice(0, 200);
+      localStorage.setItem('alertLog', JSON.stringify(alerts));
+      renderAlerts();
+      updateStats();
+      if (type === 'danger') document.getElementById('alarmSound').play();
+    }
+
+    function dismissAlert(id) {
+      alerts = alerts.filter(a => a.id !== id);
+      localStorage.setItem('alertLog', JSON.stringify(alerts));
+      renderAlerts();
+      updateStats();
+    }
+
+    function clearAll() {
+      if (!confirm('Clear all alerts?')) return;
+      alerts = [];
+      localStorage.setItem('alertLog', JSON.stringify(alerts));
+      renderAlerts();
+      updateStats();
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('active','active-all','active-warn');
+      });
+      const btn = document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1));
+      if (btn) {
+        btn.classList.add('active');
+        if (f === 'all')     btn.classList.add('active-all');
+        if (f === 'warning') btn.classList.add('active-warn');
+      }
+      renderAlerts();
+    }
+
+    function renderAlerts() {
+      const filtered = currentFilter === 'all' ? alerts : alerts.filter(a => a.type === currentFilter);
+      const list = document.getElementById('alertList');
+      if (!filtered.length) {
+        list.innerHTML = `<div class="no-alerts">
+          <span class="big-icon">✅</span>
+          No ${currentFilter === 'all' ? '' : currentFilter + ' '}alerts logged.
+        </div>`;
+        return;
+      }
+      list.innerHTML = filtered.map(a => `
+        <div class="alert-item ${a.type}" id="alert-${a.id}">
+          <div class="alert-icon">${a.icon}</div>
+          <div class="alert-body">
+            <div class="alert-title">${a.title}</div>
+            <div class="alert-detail">${a.detail}</div>
+            <div class="alert-time">${a.time}</div>
+          </div>
+          <button class="alert-dismiss" onclick="dismissAlert(${a.id})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function updateStats() {
+      document.getElementById('countDanger').textContent  = alerts.filter(a => a.type==='danger').length;
+      document.getElementById('countWarning').textContent = alerts.filter(a => a.type==='warning').length;
+      document.getElementById('countTotal').textContent   = alerts.length;
+      document.getElementById('lastAlertTime').textContent = alerts.length ? alerts[0].time.split(',')[1]?.trim() || '--' : '--';
+    }
+
+    function exportAlerts() {
+      if (!alerts.length) { alert('No alerts to export.'); return; }
+      const rows = [['Time','Type','Title','Detail']];
+      alerts.forEach(a => rows.push([a.time, a.type, a.title, a.detail]));
+      const csv  = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href     = URL.createObjectURL(blob);
+      link.download = `poultry-alerts-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+
+    // ── Live Firebase listeners ──
+    const t = thresholds();
+
+    db.ref('/data/temperature').limitToLast(1).on('value', snap => {
+      const val = snap.val();
+      if (!val) return;
+      const v = parseFloat(Object.values(val)[0]);
+      const th = thresholds();
+      if (v < th.tempMin)      addAlert('danger',  '🚨', 'Temperature too low',  `${v.toFixed(1)} °C — below ${th.tempMin} °C minimum`);
+      else if (v > th.tempMax) addAlert('danger',  '🚨', 'Temperature too high', `${v.toFixed(1)} °C — above ${th.tempMax} °C maximum`);
+    });
+
+    db.ref('/data/humidity').limitToLast(1).on('value', snap => {
+      const val = snap.val();
+      if (!val) return;
+      const v = parseFloat(Object.values(val)[0]);
+      const th = thresholds();
+      if (v < th.humMin)      addAlert('warning', '⚠️', 'Humidity too low',  `${v.toFixed(1)} % — below ${th.humMin}% minimum`);
+      else if (v > th.humMax) addAlert('warning', '⚠️', 'Humidity too high', `${v.toFixed(1)} % — above ${th.humMax}% maximum`);
+    });
+
+    db.ref('/data/light').limitToLast(1).on('value', snap => {
+      const val = snap.val();
+      if (!val) return;
+      const v = parseInt(Object.values(val)[0], 10);
+      const th = thresholds();
+      if (v < th.lightMin)      addAlert('warning', '💡', 'Light level too low',  `${v}% brightness — below ${th.lightMin}% threshold`);
+      else if (v > th.lightMax) addAlert('warning', '💡', 'Light level too high', `${v}% brightness — above ${th.lightMax}% threshold`);
+    });
+
+    db.ref('/data/weight').limitToLast(1).on('value', snap => {
+      const val = snap.val();
+      if (!val) return;
+      const v = parseFloat(Object.values(val)[0]);
+      const th = thresholds();
+      if (v < th.feedMin)      addAlert('warning', '🌾', 'Feed weight too low',  `${v.toFixed(1)} g — below ${th.feedMin} g minimum`);
+      else if (v > th.feedMax) addAlert('warning', '🌾', 'Feed weight too high', `${v.toFixed(1)} g — above ${th.feedMax} g maximum`);
+    });
+
+db.ref('/data/led_status').on('value', snap => {
+      const v = snap.val();
+      if (v !== null) addAlert('info', '💡', 'LED state changed', `House light is now ${v ? 'ON' : 'OFF'}`);
+    });
+
+    db.ref('/data/water_level').limitToLast(1).on('value', snap => {
+      const val = snap.val();
+      if (!val) return;
+      const v = parseInt(Object.values(val)[0], 10);
+      const th = thresholds();
+      if (v < th.waterMin)      addAlert('danger',  '💧', 'Water level too low',  `${v}% — below ${th.waterMin}% minimum`);
+      else if (v > th.waterMax) addAlert('warning', '💧', 'Water level too high', `${v}% — above ${th.waterMax}% maximum`);
+    });
+
+    // Initial render
+    renderAlerts();
+    updateStats();
+  </script>
+  <script src="nav.js"></script>
+</body>
+</html>

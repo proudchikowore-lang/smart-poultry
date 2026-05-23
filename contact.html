@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Poultry Monitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Portfolio design tokens ── */
+    :root {
+      --pt-bg-deep: #020810;
+      --pt-bg-mid:  #060e1a;
+      --pt-bg-card: #0a1628;
+      --pt-cyan:    #00e5ff;
+      --pt-gold:    #ffc947;
+      --pt-green:   #39ff14;
+      --pt-gray:    #8a9bb5;
+      --pt-border:  rgba(0,229,255,0.15);
+      --pt-glow-cyan: 0 0 20px rgba(0,229,255,0.4), 0 0 60px rgba(0,229,255,0.1);
+      --pt-glow-gold: 0 0 20px rgba(255,201,71,0.4), 0 0 60px rgba(255,201,71,0.1);
+    }
+
+    /* ── Animated circuit canvas ── */
+    #circuit-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      opacity: .3;
+      pointer-events: none;
+    }
+
+    /* ── Noise overlay ── */
+    .main-content::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 128px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: .25;
+    }
+
+    /* ── Override body bg for this page ── */
+    body {
+      background: linear-gradient(160deg, var(--pt-bg-deep) 0%, #060e1a 60%, #0a1628 100%);
+      background-attachment: fixed;
+    }
+
+    /* ── Main content sits above canvas ── */
+    .main-content { position: relative; z-index: 2; }
+    .container    { position: relative; z-index: 2; }
+
+    /* ── Section label / title (portfolio style) ── */
+    .pt-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem;
+      color: var(--pt-cyan);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: .75;
+      margin-bottom: .6rem;
+    }
+    .pt-label::before { content: '// '; }
+
+    .pt-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 900;
+      color: #f0f8ff;
+      line-height: 1.2;
+      margin-bottom: .8rem;
+    }
+    .pt-title span { color: var(--pt-cyan); text-shadow: var(--pt-glow-cyan); }
+
+    .pt-divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--pt-cyan), transparent);
+      box-shadow: var(--pt-glow-cyan);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Hero banner ── */
+    .contact-hero {
+      background: linear-gradient(135deg, #060e1a 0%, #0a1e34 60%, #071220 100%);
+      border: 1px solid var(--pt-border);
+      border-radius: 16px;
+      padding: 40px 36px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 80% 50%, rgba(0,229,255,0.05) 0%, transparent 70%);
+    }
+    .contact-hero .hero-icon {
+      font-size: 60px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 12px rgba(0,229,255,0.4));
+    }
+    .contact-hero h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f0f8ff;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .contact-hero p {
+      font-size: 14px;
+      color: var(--pt-gray);
+      line-height: 1.8;
+      max-width: 90%;
+    }
+    .contact-hero p strong { color: #f0f8ff; }
+    .version-badge {
+      display: inline-block;
+      background: rgba(0,229,255,0.08);
+      border: 1px solid rgba(0,229,255,0.2);
+      color: var(--pt-cyan);
+      border-radius: 20px;
+      padding: 3px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* ── Two-column contact layout ── */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 760px) {
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Contact info card ── */
+    .contact-info-card {
+      background: var(--pt-bg-card);
+      border: 1px solid var(--pt-border);
+      border-radius: 14px;
+      padding: 28px 26px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--pt-border);
+      border-radius: 6px;
+      text-decoration: none;
+      color: #f0f8ff;
+      transition: all .3s;
+      margin-bottom: 10px;
+      cursor: none;
+    }
+    .contact-item:last-child { margin-bottom: 0; }
+    .contact-item:hover {
+      border-color: var(--pt-cyan);
+      transform: translateX(6px);
+      box-shadow: var(--pt-glow-cyan);
+      background: rgba(0,229,255,0.04);
+    }
+    .contact-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .contact-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem;
+      color: var(--pt-cyan);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .contact-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: .95rem;
+      color: var(--pt-gray);
+    }
+
+    /* Developer note box */
+    .dev-note {
+      margin-top: 20px;
+      background: rgba(255,201,71,0.05);
+      border: 1px solid rgba(255,201,71,0.2);
+      border-left: 3px solid var(--pt-gold);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--pt-gray);
+      line-height: 1.7;
+    }
+    .dev-note .dev-label {
+      color: var(--pt-gold);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    /* ── Contact form card ── */
+    .contact-form-card {
+      background: var(--pt-bg-card);
+      border: 1px solid var(--pt-border);
+      border-radius: 14px;
+      padding: 28px 26px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .form-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .66rem;
+      color: var(--pt-cyan);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .form-input, .form-textarea, .form-select {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--pt-border);
+      border-radius: 4px;
+      padding: .85rem 1.1rem;
+      color: #f0f8ff;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      transition: border-color .3s, box-shadow .3s;
+      outline: none;
+      width: 100%;
+    }
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: rgba(138,155,181,0.5); }
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      border-color: var(--pt-cyan);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.06);
+    }
+    .form-textarea { height: 120px; resize: none; }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5ff' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: none;
+    }
+    .form-select option { background: #0a1628; color: #f0f8ff; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 520px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .form-submit {
+      width: 100%;
+      padding: 1rem;
+      background: var(--pt-cyan);
+      color: var(--pt-bg-deep);
+      border: none;
+      border-radius: 4px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: none;
+      transition: all .3s;
+      box-shadow: var(--pt-glow-cyan);
+      margin-top: 4px;
+    }
+    .form-submit:hover {
+      background: #f0f8ff;
+      box-shadow: 0 0 40px rgba(0,229,255,0.5);
+      transform: translateY(-2px);
+    }
+    .form-submit:active { transform: translateY(0); }
+
+    /* ── Full-width support row ── */
+    .support-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .support-card {
+      background: var(--pt-bg-card);
+      border: 1px solid var(--pt-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: all .3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .support-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--pt-cyan), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .support-card:hover {
+      border-color: rgba(0,229,255,0.35);
+      transform: translateY(-4px);
+      box-shadow: var(--pt-glow-cyan);
+    }
+    .support-card:hover::before { opacity: 1; }
+    .support-icon { font-size: 2rem; display: block; margin-bottom: 10px; }
+    .support-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .72rem;
+      font-weight: 700;
+      color: #f0f8ff;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .support-desc {
+      font-size: 12px;
+      color: var(--pt-gray);
+      line-height: 1.6;
+    }
+
+    /* ── Reveal animation ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Keyframes ── */
+    @keyframes floatTag {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    /* ── Light mode overrides ── */
+    body.light {
+      background: linear-gradient(160deg, #e8f0f8 0%, #d0e0f0 60%, #c8d8ec 100%) !important;
+    }
+    body.light .contact-hero        { background: linear-gradient(135deg,#d0e4f8,#c0d4ee,#d8ecf8) !important; border-color: rgba(14,165,233,0.25); }
+    body.light .contact-hero h2     { color: #1a2a3a; }
+    body.light .contact-hero p      { color: #3a5068; }
+    body.light .contact-info-card,
+    body.light .contact-form-card   { background: rgba(255,255,255,0.85); border-color: rgba(14,165,233,0.2); }
+    body.light .contact-item        { background: rgba(14,165,233,0.04); border-color: rgba(14,165,233,0.2); color: #1a2a3a; }
+    body.light .contact-item:hover  { border-color: #0ea5e9; background: rgba(14,165,233,0.08); }
+    body.light .contact-label       { color: #0284c7; }
+    body.light .contact-val         { color: #3a5068; }
+    body.light .form-input,
+    body.light .form-textarea,
+    body.light .form-select         { background: rgba(255,255,255,0.9); border-color: rgba(14,165,233,0.3); color: #1a2a3a; }
+    body.light .form-input:focus,
+    body.light .form-textarea:focus,
+    body.light .form-select:focus   { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+    body.light .form-label          { color: #0284c7; }
+    body.light .pt-label            { color: #0284c7; }
+    body.light .pt-title            { color: #1a2a3a; }
+    body.light .pt-title span       { color: #0284c7; text-shadow: none; }
+    body.light .pt-divider          { background: linear-gradient(90deg, #0ea5e9, transparent); box-shadow: none; }
+    body.light .support-card        { background: rgba(255,255,255,0.85); border-color: rgba(14,165,233,0.2); }
+    body.light .support-card:hover  { border-color: #0ea5e9; box-shadow: 0 8px 24px rgba(14,165,233,0.15); }
+    body.light .support-card::before { background: linear-gradient(90deg, #0ea5e9, transparent); }
+    body.light .support-title       { color: #1a2a3a; }
+    body.light .support-desc        { color: #3a5068; }
+    body.light .dev-note            { background: rgba(234,179,8,0.06); border-color: rgba(234,179,8,0.3); color: #3a5068; }
+    body.light .dev-note .dev-label { color: #b45309; }
+    body.light .version-badge       { background: rgba(14,165,233,0.08); border-color: rgba(14,165,233,0.3); color: #0284c7; }
+    body.light #circuit-canvas      { opacity: .08; }
+  </style>
+</head>
+<body>
+
+  <!-- Circuit canvas background -->
+  <canvas id="circuit-canvas"></canvas>
+
+  <header class="site-header">
+    <div class="header-container">
+      <h1>
+        <span>🐔</span>
+        <span class="animated-text">POULTRY HOUSE SMART MONITORING</span>
+      </h1>
+      <label class="theme-toggle">
+        <input type="checkbox" id="themeSwitch">
+        <span class="toggle-label">🌙</span>
+      </label>
+      <button id="logoutBtn" class="export-btn">Logout</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container" style="padding-top: 30px; padding-bottom: 40px;">
+
+      <!-- ── Hero ── -->
+      <div class="contact-hero reveal">
+        <div class="hero-icon">📡</div>
+        <div>
+          <h2>Get In Touch</h2>
+          <p>
+            Have a question about the system, need help with a reading you don't understand,
+            or want to report a technical issue? Reach out directly to
+            <strong>Team Technomind</strong> — the developers behind this platform.
+            Support is available for all authorised farm users.
+          </p>
+          <span class="version-badge">// SUPPORT &amp; CONTACT</span>
+        </div>
+      </div>
+
+      <!-- ── Support cards ── -->
+      <div class="support-row">
+        <div class="support-card reveal">
+          <span class="support-icon">⚡</span>
+          <div class="support-title">Technical Support</div>
+          <div class="support-desc">Sensor not reading? Dashboard not loading? Report hardware or software issues.</div>
+        </div>
+        <div class="support-card reveal">
+          <span class="support-icon">🔔</span>
+          <div class="support-title">Alert Configuration</div>
+          <div class="support-desc">Need help setting thresholds for your flock age or breed? Ask for guidance.</div>
+        </div>
+        <div class="support-card reveal">
+          <span class="support-icon">📈</span>
+          <div class="support-title">Feature Requests</div>
+          <div class="support-desc">Want a new dashboard feature or report type? Submit your suggestion here.</div>
+        </div>
+        <div class="support-card reveal">
+          <span class="support-icon">🔒</span>
+          <div class="support-title">Account Access</div>
+          <div class="support-desc">Login problems or need to add a new authorised user to the system? Get in touch.</div>
+        </div>
+      </div>
+
+      <!-- ── Main contact grid ── -->
+      <div class="contact-grid">
+
+        <!-- Left: contact details -->
+        <div class="contact-info-card reveal">
+          <div class="pt-label">Direct contact</div>
+          <div class="pt-title" style="font-size:1.2rem;margin-bottom:.5rem">Reach the <span>Developer</span></div>
+          <div class="pt-divider"></div>
+
+          <a href="mailto:proudchikowore@gmail.com" class="contact-item">
+            <div class="contact-icon">✉️</div>
+            <div>
+              <div class="contact-label">Email</div>
+              <div class="contact-val">proudchikowore@gmail.com</div>
+            </div>
+          </a>
+
+          <a href="tel:+263771054538" class="contact-item">
+            <div class="contact-icon">📞</div>
+            <div>
+              <div class="contact-label">Phone / WhatsApp</div>
+              <div class="contact-val">+263 771 054 538 — Zimbabwe</div>
+            </div>
+          </a>
+
+          <a href="https://linkedin.com/in/proud-chikowore" target="_blank" rel="noopener" class="contact-item">
+            <div class="contact-icon">💼</div>
+            <div>
+              <div class="contact-label">LinkedIn</div>
+              <div class="contact-val">linkedin.com/in/proud-chikowore</div>
+            </div>
+          </a>
+
+          <a href="https://github.com/proud-chikowore" target="_blank" rel="noopener" class="contact-item">
+            <div class="contact-icon">🐙</div>
+            <div>
+              <div class="contact-label">GitHub</div>
+              <div class="contact-val">github.com/proud-chikowore</div>
+            </div>
+          </a>
+
+          <div class="dev-note">
+            <div class="dev-label">// Response time</div>
+            Support messages are typically answered within <strong style="color:#07cc59">24 hours</strong> on weekdays.
+            For urgent issues during critical flock periods, use WhatsApp or phone for a faster response.
+          </div>
+        </div>
+
+        <!-- Right: message form -->
+        <div class="contact-form-card reveal">
+          <div class="pt-label">Send a message</div>
+          <div class="pt-title" style="font-size:1.2rem;margin-bottom:.5rem">How Can We <span>Help?</span></div>
+          <div class="pt-divider"></div>
+
+          <form action="https://formspree.io/f/xvzvqlnq" method="POST">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Your Name</label>
+<input class="form-input" type="text" id="msgName" name="name" placeholder="e.g. John Moyo" autocomplete="name" required pattern="[a-zA-Z\s'-]{2,50}" title="Name should contain only letters (2-50 characters)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input class="form-input" type="email" id="msgEmail" name="email" placeholder="you@example.com" autocomplete="email" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Topic</label>
+              <select class="form-select" id="msgTopic" name="topic">
+                <option value="" disabled selected>Select a topic…</option>
+                <option value="technical">⚡ Technical issue / sensor problem</option>
+                <option value="alerts">🔔 Alert configuration help</option>
+                <option value="account">🔒 Account / login access</option>
+                <option value="feature">📈 Feature request</option>
+                <option value="general">💬 General question</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-textarea" id="msgBody" name="message" placeholder="Tell me about your project..." required></textarea>
+            </div>
+
+            <button type="submit" class="form-submit" id="submitBtn">
+              SEND MESSAGE ▶
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer"><p>© 2026 Smart Poultry Dashboard</p></footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script type="module" src="auth-check.js"></script>
+
+  <script>
+    /* ── Theme ── */
+    const themeSwitch = document.getElementById('themeSwitch');
+    function applyTheme(isLight) {
+      document.body.classList.toggle('light', isLight);
+      themeSwitch.checked = isLight;
+      document.querySelector('.toggle-label').textContent = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    applyTheme(localStorage.getItem('theme') === 'light');
+    themeSwitch.addEventListener('change', () => applyTheme(themeSwitch.checked));
+
+    /* ── Formspree AJAX submission ── */
+    const contactForm = document.querySelector('.contact-form-card form');
+    if (contactForm) {
+      contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'SENDING...';
+        submitBtn.disabled = true;
+
+        try {
+          const response = await fetch(contactForm.action, {
+            method: 'POST',
+            body: new FormData(contactForm),
+            headers: { 'Accept': 'application/json' }
+          });
+          if (response.ok) {
+            submitBtn.innerHTML = '✓ MESSAGE SENT';
+            submitBtn.style.background = 'var(--pt-green)';
+            contactForm.reset();
+            setTimeout(() => {
+              submitBtn.innerHTML = originalText;
+              submitBtn.style.background = '';
+              submitBtn.disabled = false;
+            }, 3000);
+          } else {
+            throw new Error('Form submission failed');
+          }
+        } catch (error) {
+          submitBtn.innerHTML = '✗ TRY AGAIN';
+          submitBtn.style.background = '#ff4757';
+          submitBtn.disabled = false;
+          setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.style.background = '';
+          }, 2000);
+        }
+      });
+    }
+
+    /* ── Circuit canvas background ── */
+    const canvas = document.getElementById('circuit-canvas');
+    const ctx    = canvas.getContext('2d');
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const nodes = Array.from({ length: 55 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - .5) * .28,
+      vy: (Math.random() - .5) * .28,
+      r:  Math.random() * 2 + 1,
+      pulse: Math.random() * Math.PI * 2
+    }));
+
+    (function drawCircuit() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      nodes.forEach(n => {
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 0 || n.x > canvas.width)  n.vx *= -1;
+        if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+        n.pulse += .018;
+        const alpha = (Math.sin(n.pulse) + 1) / 2 * .6 + .2;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,229,255,${alpha})`;
+        ctx.fill();
+      });
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 140) {
+            const a = (1 - dist / 140) * .25;
+            const midX = (nodes[i].x + nodes[j].x) / 2;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(midX, nodes[i].y);
+            ctx.lineTo(midX, nodes[j].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.strokeStyle = `rgba(0,229,255,${a})`;
+            ctx.lineWidth = .5;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(drawCircuit);
+    })();
+
+    /* ── Scroll reveal ── */
+    const revealEls = document.querySelectorAll('.reveal');
+    const observer  = new IntersectionObserver(entries => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          entry.target.style.transitionDelay = (i % 4) * 0.08 + 's';
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    revealEls.forEach(el => observer.observe(el));
+
+    /* ── Form submit ── */
+    function handleSubmit(btn) {
+      const name  = document.getElementById('msgName').value.trim();
+      const email = document.getElementById('msgEmail').value.trim();
+      const topic = document.getElementById('msgTopic').value;
+      const body  = document.getElementById('msgBody').value.trim();
+
+      if (!name || !email || !topic || !body) {
+        btn.style.background = '#ff4d6d';
+        btn.style.boxShadow  = '0 0 20px rgba(255,77,109,0.4)';
+        btn.textContent      = '⚠ PLEASE FILL ALL FIELDS';
+        setTimeout(() => {
+          btn.style.background = '';
+          btn.style.boxShadow  = '';
+          btn.textContent      = 'SEND MESSAGE ▶';
+        }, 2500);
+        return;
+      }
+
+      btn.textContent   = 'SENDING…';
+      btn.style.opacity = '.7';
+
+      /* Build a mailto link as the delivery mechanism */
+      const subject = encodeURIComponent(`[Poultry Monitor] ${topic} — ${name}`);
+      const mailBody = encodeURIComponent(
+        `Name: ${name}\nEmail: ${email}\nTopic: ${topic}\n\n${body}`
+      );
+      window.location.href = `mailto:proudchikowore@gmail.com?subject=${subject}&body=${mailBody}`;
+
+      setTimeout(() => {
+        btn.textContent      = '✓ MESSAGE SENT!';
+        btn.style.background = 'var(--pt-green)';
+        btn.style.boxShadow  = '0 0 20px rgba(57,255,20,0.4)';
+        btn.style.opacity    = '1';
+        setTimeout(() => {
+          btn.textContent      = 'SEND MESSAGE ▶';
+          btn.style.background = '';
+          btn.style.boxShadow  = '';
+        }, 3500);
+      }, 1200);
+    }
+  </script>
+
+  <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management — Smart Poultry Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    const _admin = JSON.parse(localStorage.getItem("adminSession") || "null");
+    if (!_admin) window.location.replace("admin.html");
+  </script>
+  <style>
+    :root {
+      --bg-dark:     #0f172a;
+      --bg-darker:   #1e293b;
+      --glass:       rgba(255,255,255,0.06);
+      --glass-hover: rgba(255,255,255,0.09);
+      --border:      rgba(255,255,255,0.1);
+      --accent:      #0ea5e9;
+      --accent2:     #6366f1;
+      --danger:      #ef4444;
+      --warning:     #f59e0b;
+      --success:     #22c55e;
+      --text:        #f1f5f9;
+      --muted:       #94a3b8;
+      --muted2:      #475569;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-dark), var(--bg-darker));
+      min-height: 100vh; color: var(--text);
+      display: flex; flex-direction: column;
+    }
+
+    /* ══ HEADER ══ */
+    .site-header {
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      padding: 16px 0;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      position: relative; overflow: hidden;
+    }
+    .site-header::before, .site-header::after {
+      content:''; position:absolute; width:55px; height:55px;
+      border:2px solid rgba(255,255,255,0.25); border-radius:50%;
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+    .site-header::before { top:-18px; left:-18px; border-right-color:transparent; border-bottom-color:transparent; }
+    .site-header::after  { bottom:-18px; right:-18px; border-left-color:transparent; border-top-color:transparent; }
+    @keyframes pulseGlow {
+      0%,100% { transform:scale(1) rotate(0deg); opacity:.6; }
+      50%      { transform:scale(1.1) rotate(180deg); opacity:1; }
+    }
+    .header-inner {
+      max-width:1300px; margin:0 auto; padding:0 24px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .header-title {
+      display:flex; align-items:center; gap:10px;
+      font-size:clamp(16px,2.5vw,22px); font-weight:700; color:#fff; white-space:nowrap;
+    }
+    .header-title .emoji { font-size:1.3em; filter:drop-shadow(0 0 6px rgba(255,255,255,.5)); animation:emojiBounce 2s ease-in-out infinite; }
+    @keyframes emojiBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+    .admin-chip {
+      background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4);
+      border-radius:20px; padding:3px 12px; font-size:10px; font-weight:600;
+      color:#fca5a5; letter-spacing:1px; text-transform:uppercase;
+    }
+    .header-actions { display:flex; align-items:center; gap:10px; }
+    #adminName { font-size:13px; color:rgba(255,255,255,.7); }
+    .logout-btn {
+      padding:8px 18px; background:rgba(239,68,68,0.2);
+      border:1px solid rgba(239,68,68,0.4); border-radius:10px; color:#fca5a5;
+      font-family:'Poppins',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s;
+    }
+    .logout-btn:hover { background:rgba(239,68,68,0.35); transform:translateY(-1px); }
+
+    /* ══ MAIN ══ */
+    main { max-width:1300px; margin:0 auto; padding:28px 24px 60px; width:100%; flex:1; }
+
+    /* stat cards */
+    .stats-row {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:16px; margin-bottom:28px;
+    }
+    .stat-card {
+      background:var(--glass); border:1px solid var(--border); border-radius:16px;
+      padding:18px 20px; backdrop-filter:blur(8px); transition:transform .2s;
+    }
+    .stat-card:hover { transform:translateY(-2px); }
+    .stat-card .label { font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:500; }
+    .stat-card .value { font-size:28px; font-weight:700; }
+    .stat-card.total        .value { color:#60a5fa; }
+    .stat-card.active       .value { color:#4ade80; }
+    .stat-card.suspended    .value { color:#fb923c; }
+    .stat-card.admins       .value { color:#c084fc; }
+    .stat-card.farmmanagers .value { color:#34d399; }
+
+    /* toolbar */
+    .toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+    .search-wrap { position:relative; flex:1; min-width:200px; max-width:360px; }
+    .search-wrap input {
+      width:100%; background:var(--glass); border:1px solid var(--border); border-radius:12px;
+      padding:10px 16px 10px 40px; color:var(--text); font-family:'Poppins',sans-serif;
+      font-size:14px; outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    .search-wrap input::placeholder { color:var(--muted2); }
+    .search-wrap input:focus { border-color:rgba(14,165,233,.6); box-shadow:0 0 0 3px rgba(14,165,233,.1); }
+    .search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); font-size:15px; color:var(--muted2); pointer-events:none; }
+    .filter-select {
+      background:var(--glass); border:1px solid var(--border); border-radius:12px;
+      padding:10px 14px; color:var(--text); font-family:'Poppins',sans-serif;
+      font-size:13px; outline:none; cursor:pointer;
+    }
+    .filter-select option { background:#1e293b; }
+
+    .btn {
+      padding:10px 20px; border:none; border-radius:12px; font-family:'Poppins',sans-serif;
+      font-size:13px; font-weight:600; cursor:pointer; transition:all .2s;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn-primary { background:linear-gradient(135deg,#0ea5e9,#6366f1); color:#fff; }
+    .btn-primary:hover { opacity:.88; transform:translateY(-1px); box-shadow:0 6px 18px rgba(14,165,233,.35); }
+    .btn-danger  { background:rgba(239,68,68,.15); border:1px solid rgba(239,68,68,.35); color:#fca5a5; }
+    .btn-danger:hover  { background:rgba(239,68,68,.28); }
+    .btn-warning { background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.35); color:#fcd34d; }
+    .btn-warning:hover { background:rgba(245,158,11,.28); }
+    .btn-success { background:rgba(34,197,94,.15); border:1px solid rgba(34,197,94,.35); color:#86efac; }
+    .btn-success:hover { background:rgba(34,197,94,.28); }
+    .btn-sm { padding:6px 14px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.4; cursor:not-allowed; transform:none !important; }
+    .btn-refresh { background:var(--glass); border:1px solid var(--border); color:var(--muted); }
+    .btn-refresh:hover { background:var(--glass-hover); color:var(--text); }
+    .spin { animation:spin .7s linear infinite; display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* table */
+    .table-wrap {
+      background:var(--glass); border:1px solid var(--border); border-radius:20px;
+      overflow:hidden; backdrop-filter:blur(8px);
+    }
+    table { width:100%; border-collapse:collapse; }
+    thead tr { background:rgba(255,255,255,0.05); }
+    thead th {
+      padding:14px 18px; text-align:left; font-size:11px; font-weight:600;
+      color:var(--muted); letter-spacing:.8px; text-transform:uppercase;
+      border-bottom:1px solid var(--border); white-space:nowrap;
+    }
+    tbody tr { border-bottom:1px solid rgba(255,255,255,0.05); transition:background .15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:rgba(255,255,255,0.04); }
+    tbody td { padding:14px 18px; font-size:13px; vertical-align:middle; }
+
+    .avatar {
+      width:36px; height:36px; border-radius:50%;
+      background:linear-gradient(135deg,#0ea5e9,#6366f1);
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:700; color:#fff; flex-shrink:0;
+    }
+    .user-cell { display:flex; align-items:center; gap:12px; }
+    .user-email { font-size:13px; color:var(--text); font-weight:500; }
+    .user-name  { font-size:11px; color:var(--muted); margin-top:2px; }
+
+    .badge {
+      display:inline-block; padding:3px 10px; border-radius:20px;
+      font-size:11px; font-weight:600; letter-spacing:.3px;
+    }
+    .badge-active       { background:rgba(34,197,94,.18);  color:#86efac; border:1px solid rgba(34,197,94,.3); }
+    .badge-suspended    { background:rgba(245,158,11,.18); color:#fcd34d; border:1px solid rgba(245,158,11,.3); }
+    .badge-admin        { background:rgba(192,132,252,.18);color:#e9d5ff; border:1px solid rgba(192,132,252,.3); }
+    .badge-farmmanager  { background:rgba(52,211,153,.18); color:#6ee7b7; border:1px solid rgba(52,211,153,.3); }
+    .badge-user         { background:rgba(148,163,184,.18);color:#cbd5e1; border:1px solid rgba(148,163,184,.3); }
+
+    .actions-cell { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+
+    /* self-row highlight */
+    tr.self-row td { opacity:.55; }
+    tr.self-row td:last-child .btn { pointer-events:none; opacity:.3; }
+
+    .table-state { text-align:center; padding:48px 20px; color:var(--muted); font-size:14px; }
+    .table-state .icon { font-size:36px; margin-bottom:10px; display:block; }
+
+    /* modals */
+    .modal-backdrop {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+      z-index:9000; align-items:center; justify-content:center; padding:20px;
+    }
+    .modal-backdrop.open { display:flex; }
+    .modal {
+      background:#1e2d3d; border:1px solid rgba(255,255,255,.12); border-radius:20px;
+      padding:36px 32px 28px; width:100%; max-width:460px;
+      box-shadow:0 32px 80px rgba(0,0,0,.6); position:relative; animation:popIn .2s ease;
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+    .modal h2 { font-size:18px; font-weight:700; margin-bottom:6px; }
+    .modal .sub { font-size:13px; color:var(--muted); margin-bottom:24px; }
+    .modal-close {
+      position:absolute; top:16px; right:20px;
+      background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; line-height:1; transition:color .2s;
+    }
+    .modal-close:hover { color:var(--text); }
+
+    .field-wrap { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+    .field-wrap label { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.7px; text-transform:uppercase; }
+    .field-wrap input, .field-wrap select {
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+      border-radius:10px; padding:12px 14px; color:var(--text);
+      font-family:'Poppins',sans-serif; font-size:14px; outline:none;
+      transition:border-color .2s, box-shadow .2s; width:100%;
+    }
+    .field-wrap input::placeholder { color:#334155; }
+    .field-wrap input:focus, .field-wrap select:focus {
+      border-color:rgba(14,165,233,.6); box-shadow:0 0 0 3px rgba(14,165,233,.1);
+    }
+    .field-wrap select option { background:#1e293b; }
+    .password-hint { font-size:11px; color:var(--muted2); margin-top:4px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+    #modalMsg { font-size:13px; margin-top:10px; text-align:center; min-height:18px; border-radius:8px; padding:0; transition:all .2s; }
+    #modalMsg:not(:empty)         { padding:8px 12px; background:rgba(239,68,68,.1); color:#fca5a5; }
+    #modalMsg.success:not(:empty) { background:rgba(34,197,94,.1); color:#86efac; }
+
+    .info-box {
+      background:rgba(14,165,233,.08); border:1px solid rgba(14,165,233,.25);
+      border-radius:10px; padding:10px 14px; font-size:12px; color:#7dd3fc;
+      margin-bottom:16px; line-height:1.6;
+    }
+
+    /* confirm modal */
+    .confirm-modal { max-width:380px; text-align:center; }
+    .confirm-icon  { font-size:40px; margin-bottom:12px; display:block; }
+    .confirm-modal h2 { font-size:17px; }
+    .confirm-modal .sub { margin-bottom:12px; }
+    .confirm-modal .target-email { font-weight:600; color:var(--accent); word-break:break-all; }
+
+    /* toast */
+    .toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:12px; }
+    .toast {
+      min-width:280px; max-width:380px; padding:13px 18px; border-radius:14px;
+      display:flex; align-items:center; gap:10px; font-size:13px; font-weight:500;
+      animation:slideIn .35s ease; box-shadow:0 8px 24px rgba(0,0,0,.4);
+    }
+    @keyframes slideIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+    .toast-success { background:linear-gradient(135deg,#166534,#14532d); border:1px solid rgba(34,197,94,.3); color:#bbf7d0; }
+    .toast-danger  { background:linear-gradient(135deg,#7f1d1d,#991b1b); border:1px solid rgba(239,68,68,.3); color:#fecaca; }
+    .toast-warning { background:linear-gradient(135deg,#78350f,#92400e); border:1px solid rgba(245,158,11,.3); color:#fde68a; }
+    .toast-close { margin-left:auto; background:none; border:none; cursor:pointer; color:inherit; opacity:.6; font-size:16px; }
+    .toast-close:hover { opacity:1; }
+
+    footer { background:var(--bg-darker); padding:12px; text-align:center; font-size:12px; opacity:.6; }
+
+    @media(max-width:768px) {
+      .hide-mobile { display:none; }
+      main { padding:20px 14px 50px; }
+      .modal { padding:28px 20px 22px; }
+    }
+    @media(max-width:520px) {
+      .toolbar { flex-direction:column; align-items:stretch; }
+      .search-wrap { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-title">
+      <span class="emoji">🐔</span>
+      Smart Poultry Monitor
+      <span class="admin-chip">Admin</span>
+    </div>
+    <div class="header-actions">
+      <span id="adminName"></span>
+      <button class="logout-btn" id="logoutBtn">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main>
+  <div style="margin-bottom:24px;">
+    <h2 style="font-size:20px;font-weight:700;">USER MANAGEMENT</h2>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stats-row">
+    <div class="stat-card total">
+      <div class="label">Total</div>
+      <div class="value" id="statTotal">—</div>
+    </div>
+    <div class="stat-card active">
+      <div class="label">Active</div>
+      <div class="value" id="statActive">—</div>
+    </div>
+    <div class="stat-card suspended">
+      <div class="label">Suspended</div>
+      <div class="value" id="statSuspended">—</div>
+    </div>
+    <div class="stat-card admins">
+      <div class="label">Admins</div>
+      <div class="value" id="statAdmins">—</div>
+    </div>
+    <div class="stat-card farmusers">
+      <div class="label">Farm Users</div>
+      <div class="value" id="statFarmUsers">—</div>
+    </div>
+    <div class="stat-card farmmanagers">
+      <div class="label">Farm Managers</div>
+      <div class="value" id="statFarmManagers">—</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by email or name…" oninput="filterTable()" />
+    </div>
+    <select class="filter-select" id="filterStatus" onchange="filterTable()">
+      <option value="all">All statuses</option>
+      <option value="active">Active only</option>
+      <option value="suspended">Suspended only</option>
+    </select>
+    <select class="filter-select" id="filterRole" onchange="filterTable()">
+      <option value="all">All roles</option>
+      <option value="admin">Admin</option>
+      <option value="farm manager">Farm Manager</option>
+      <option value="user">User</option>
+    </select>
+    <button class="btn btn-refresh" id="refreshBtn" onclick="loadUsers()">↻ Refresh</button>
+    <button class="btn btn-primary" onclick="openAddModal()">＋ Add User</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="usersTable">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th class="hide-mobile">UID</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th class="hide-mobile">Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersBody">
+        <tr><td colspan="6"><div class="table-state"><span class="icon">⏳</span>Loading users…</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ══ FOOTER ══ -->
+<footer>Smart Poultry Admin Panel &mdash; Access restricted to authorised administrators</footer>
+
+<!-- ══ TOAST CONTAINER ══ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ════════════════════════════════════════
+     ADD USER MODAL
+════════════════════════════════════════ -->
+<div class="modal-backdrop" id="addModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    <h2>Add New User</h2>
+    <p class="sub">Creates a Firebase Auth account and an <strong>admins/{uid}</strong> document</p>
+
+    <div class="field-wrap">
+      <label>Email Address</label>
+      <input type="email" id="newEmail" placeholder="user@farm.com" />
+    </div>
+    <div class="field-wrap">
+      <label>Password</label>
+      <input type="password" id="newPassword" placeholder="Minimum 6 characters" />
+      <span class="password-hint">Minimum 6 characters</span>
+    </div>
+    <div class="field-wrap">
+      <label>Role</label>
+      <select id="newRole">
+        <option value="user">User</option>
+        <option value="farm manager">Farm Manager</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+
+    <p id="modalMsg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-success" id="addModalBtn" onclick="submitUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     RESET PASSWORD MODAL
+════════════════════════════════════════ -->
+<div class="modal-backdrop" id="resetModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('resetModal')">×</button>
+    <h2>Reset Password</h2>
+    <p class="sub">Send a reset link to <strong id="resetEmailLabel" style="color:var(--accent)"></strong></p>
+    <div class="info-box">
+      ℹ️ The client SDK cannot set another user's password directly. Firebase will email
+      a secure reset link to the user's address.
+    </div>
+    <p id="resetMsg" style="font-size:13px;min-height:18px;border-radius:8px;padding:0;transition:all .2s;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-warning" id="resetBtn" onclick="submitReset()">Send Reset Email</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     CONFIRM ACTION MODAL
+════════════════════════════════════════ -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal confirm-modal">
+    <span class="confirm-icon" id="confirmIcon">⚠️</span>
+    <h2 id="confirmTitle">Confirm action</h2>
+    <p class="sub" id="confirmSub">Are you sure?</p>
+    <p class="target-email" id="confirmTarget"></p>
+    <div class="modal-actions" style="justify-content:center;margin-top:20px;">
+      <button class="btn" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     FIREBASE + APP LOGIC
+════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc }               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initUserManagerBackend, firebaseConfig,
+         nameFromEmail, MANAGEABLE_ROLES }         from "./usermanager-backend.js";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * DATA SOURCE: Firestore "admins" collection
+ *
+ * Every account (admin, farm manager, user) has a document at admins/{uid}.
+ * Owner documents exist in the collection but are filtered out in the backend
+ * before being returned — they never appear in this UI and cannot be mutated.
+ *
+ * Document shape:
+ *   {
+ *     email:       string,
+ *     displayName: string,
+ *     role:        "admin" | "farm manager" | "user",   // "owner" filtered out
+ *     suspended:   boolean,
+ *     createdAt:   Timestamp,
+ *   }
+ *
+ * Operations:
+ *   List    → getDocs(collection("admins"))  filtered role !== "owner"
+ *   Add     → createUserWithEmailAndPassword (secondary app) + setDoc admins/{uid}
+ *   Delete  → deleteDoc admins/{uid}         (owner-guarded, self-guarded)
+ *   Suspend → updateDoc { suspended }        (owner-guarded, self-guarded)
+ *   Reset   → sendPasswordResetEmail to user's admins/{uid}.email
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const backend = initUserManagerBackend(app);
+
+let currentUid = null;   // UID of the logged-in admin — used for self-action guards
+
+/* ─── Auth guard ─────────────────────────────────────────────────────────────
+ * Verifies the Firebase Auth token is live and the admin doc still exists
+ * in the "admins" collection before allowing access to this page.
+ * ────────────────────────────────────────────────────────────────────────── */
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.replace('admin.html'); return; }
+
+  const session = JSON.parse(localStorage.getItem('adminSession') || 'null');
+  if (!session || session.uid !== user.uid) {
+    await signOut(auth);
+    localStorage.removeItem('adminSession');
+    window.location.replace('admin.html');
+    return;
+  }
+
+  // Confirm admin document still exists in Firestore
+  try {
+    const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+    if (!adminDoc.exists()) {
+      await signOut(auth);
+      localStorage.removeItem('adminSession');
+      window.location.replace('admin.html');
+      return;
+    }
+  } catch (_) {
+    // Firestore temporarily unreachable — trust the localStorage session
+  }
+
+  currentUid = user.uid;
+  document.getElementById('adminName').textContent = session.name || user.email;
+  loadUsers();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await signOut(auth);
+  localStorage.removeItem('adminSession');
+  window.location.replace('admin.html');
+});
+
+/* ─── State ──────────────────────────────────────── */
+let allUsers      = [];
+let pendingAction = null;
+let resetUid      = null;
+let resetEmail    = null;
+
+/* ─── Load from Firestore admins collection ──────── */
+window.loadUsers = async function() {
+  const btn = document.getElementById('refreshBtn');
+  btn.innerHTML = '<span class="spin">↻</span> Loading…';
+  btn.disabled  = true;
+
+  try {
+    allUsers = await backend.listUsers();   // owners already filtered out
+    renderTable(allUsers);
+    updateStats();
+  } catch (err) {
+    showToast('Failed to load users: ' + err.message, 'danger');
+    document.getElementById('usersBody').innerHTML =
+      `<tr><td colspan="6"><div class="table-state"><span class="icon">❌</span>${err.message}</div></td></tr>`;
+  } finally {
+    btn.innerHTML = '↻ Refresh';
+    btn.disabled  = false;
+  }
+};
+
+/* ─── Render table ───────────────────────────────── */
+function roleBadge(role) {
+  if (role === 'admin')        return `<span class="badge badge-admin">Admin</span>`;
+  if (role === 'farm manager') return `<span class="badge badge-farmmanager">Farm Manager</span>`;
+  return                              `<span class="badge badge-user">User</span>`;
+}
+
+function renderTable(users) {
+  const tbody = document.getElementById('usersBody');
+  if (!users.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="table-state"><span class="icon">👤</span>No users found</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => {
+    const initials  = (u.email || '?').slice(0, 2).toUpperCase();
+    const name      = u.displayName || nameFromEmail(u.email);
+    const shortUid  = (u.uid || '').slice(0, 10) + '…';
+    const isSelf    = u.uid === currentUid;
+
+    let created = '—';
+    try { if (u.createdAt) created = new Date(u.createdAt).toLocaleDateString(); } catch (_) {}
+
+    const statusBadge = u.suspended
+      ? `<span class="badge badge-suspended">Suspended</span>`
+      : `<span class="badge badge-active">Active</span>`;
+
+    const suspendBtn = u.suspended
+      ? `<button class="btn btn-success btn-sm" onclick="confirmAction('unsuspend','${u.uid}','${u.email}')">Unsuspend</button>`
+      : `<button class="btn btn-warning btn-sm" onclick="confirmAction('suspend','${u.uid}','${u.email}')">Suspend</button>`;
+
+    // Self-row: mute actions + add tooltip
+    const selfAttr = isSelf ? ' title="Cannot modify your own account"' : '';
+
+    return `<tr class="${isSelf ? 'self-row' : ''}">
+      <td>
+        <div class="user-cell">
+          <div class="avatar">${initials}</div>
+          <div>
+            <div class="user-email">${u.email || '—'}</div>
+            <div class="user-name">${name}</div>
+          </div>
+        </div>
+      </td>
+      <td class="hide-mobile" style="font-size:11px;color:var(--muted);font-family:monospace;">${shortUid}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td>${statusBadge}</td>
+      <td class="hide-mobile" style="font-size:12px;color:var(--muted);">${created}</td>
+      <td>
+        <div class="actions-cell"${selfAttr}>
+          ${suspendBtn}
+          <button class="btn btn-warning btn-sm" onclick="openResetModal('${u.uid}','${u.email}')">Reset PW</button>
+          <button class="btn btn-danger  btn-sm" onclick="confirmAction('delete','${u.uid}','${u.email}')">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─── Stats ──────────────────────────────────────── */
+function updateStats() {
+  document.getElementById('statTotal').textContent        = allUsers.length;
+  document.getElementById('statActive').textContent       = allUsers.filter(u => !u.suspended).length;
+  document.getElementById('statSuspended').textContent    = allUsers.filter(u =>  u.suspended).length;
+  document.getElementById('statAdmins').textContent       = allUsers.filter(u =>  u.role === 'admin').length;
+  document.getElementById('statFarmUsers').textContent   = allUsers.filter(u =>  u.role === 'user').length;
+  document.getElementById('statFarmManagers').textContent = allUsers.filter(u =>  u.role === 'farm manager').length;
+}
+
+/* ─── Filter ─────────────────────────────────────── */
+window.filterTable = function() {
+  const q      = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('filterStatus').value;
+  const role   = document.getElementById('filterRole').value;
+
+  const filtered = allUsers.filter(u => {
+    const name   = u.displayName || nameFromEmail(u.email);
+    const matchQ = !q
+      || u.email?.toLowerCase().includes(q)
+      || name.toLowerCase().includes(q);
+    const matchS = status === 'all'
+      || (status === 'active'    && !u.suspended)
+      || (status === 'suspended' &&  u.suspended);
+    const matchR = role === 'all' || u.role === role;
+    return matchQ && matchS && matchR;
+  });
+  renderTable(filtered);
+};
+
+/* ─── Add User modal ─────────────────────────────── */
+window.openAddModal = function() {
+  document.getElementById('newEmail').value    = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('newRole').value     = 'user';
+  setModalMsg('');
+  openModal('addModal');
+};
+
+window.submitUser = async function() {
+  const email    = document.getElementById('newEmail').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const role     = document.getElementById('newRole').value;
+  const btn      = document.getElementById('addModalBtn');
+
+  if (!email)              { setModalMsg('Email is required.');                      return; }
+  if (!password)           { setModalMsg('Password is required (min 6 chars).');     return; }
+  if (password.length < 6) { setModalMsg('Password must be at least 6 characters.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Creating…';
+  setModalMsg('');
+
+  try {
+    // Secondary Firebase app is used so the current admin stays signed in.
+    // The new document is written to admins/{uid} in Firestore.
+    await backend.addUser({ email, password, role });
+    setModalMsg('✅ User created successfully!', true);
+    showToast(`${email} added as ${role}.`, 'success');
+    await loadUsers();
+    setTimeout(() => closeModal('addModal'), 1200);
+  } catch (err) {
+    setModalMsg(friendlyError(err.code) || err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create User';
+  }
+};
+
+/* ─── Confirm action (suspend / unsuspend / delete) ─ */
+window.confirmAction = function(action, uid, email) {
+  // Self-guard (belt-and-suspenders alongside the CSS dim)
+  if (uid === currentUid) {
+    showToast('You cannot modify your own account.', 'warning');
+    return;
+  }
+
+  pendingAction = { action, uid, email };
+
+  const map = {
+    suspend:   { icon:'⏸️',  title:'Suspend User',   sub:'Sets suspended = true in Firestore. The user will be denied access on next login check.', btnClass:'btn-warning', btnText:'Suspend'   },
+    unsuspend: { icon:'▶️',  title:'Unsuspend User', sub:'Restores the user\'s active status in Firestore.',                                         btnClass:'btn-success', btnText:'Unsuspend' },
+    delete:    { icon:'🗑️', title:'Delete User',    sub:'Removes the admins/{uid} document permanently. Cannot be undone.',                          btnClass:'btn-danger',  btnText:'Delete'    },
+  };
+  const m = map[action];
+
+  document.getElementById('confirmIcon').textContent   = m.icon;
+  document.getElementById('confirmTitle').textContent  = m.title;
+  document.getElementById('confirmSub').textContent    = m.sub;
+  document.getElementById('confirmTarget').textContent = email;
+
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.className   = `btn ${m.btnClass}`;
+  okBtn.textContent = m.btnText;
+  okBtn.onclick     = executeAction;
+
+  openModal('confirmModal');
+};
+
+async function executeAction() {
+  if (!pendingAction) return;
+  const { action, uid, email } = pendingAction;
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.disabled = true; okBtn.textContent = 'Working…';
+
+  try {
+    if (action === 'delete') {
+      await backend.deleteUser(uid, currentUid);
+      allUsers = allUsers.filter(u => u.uid !== uid);
+      showToast(`${email} removed from admins collection.`, 'success');
+
+    } else if (action === 'suspend') {
+      await backend.setDisabled(uid, true, currentUid);
+      const u = allUsers.find(u => u.uid === uid);
+      if (u) u.suspended = true;
+      showToast(`${email} suspended.`, 'warning');
+
+    } else if (action === 'unsuspend') {
+      await backend.setDisabled(uid, false, currentUid);
+      const u = allUsers.find(u => u.uid === uid);
+      if (u) u.suspended = false;
+      showToast(`${email} unsuspended.`, 'success');
+    }
+
+    updateStats();
+    filterTable();
+    closeModal('confirmModal');
+
+  } catch (err) {
+    showToast('Error: ' + err.message, 'danger');
+  } finally {
+    okBtn.disabled = false;
+  }
+}
+
+/* ─── Reset Password modal ───────────────────────── */
+window.openResetModal = function(uid, email) {
+  resetUid   = uid;
+  resetEmail = email;
+  document.getElementById('resetEmailLabel').textContent = email;
+  const msg = document.getElementById('resetMsg');
+  msg.textContent = ''; msg.style.cssText = '';
+  openModal('resetModal');
+};
+
+window.submitReset = async function() {
+  const btn = document.getElementById('resetBtn');
+  const msg = document.getElementById('resetMsg');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  msg.textContent = '';
+
+  try {
+    await backend.resetPassword(resetUid);
+    msg.textContent = `✅ Reset email sent to ${resetEmail}`;
+    msg.style.cssText = 'padding:8px 12px;background:rgba(34,197,94,.1);color:#86efac;border-radius:8px;';
+    showToast('Password reset email sent.', 'success');
+    setTimeout(() => closeModal('resetModal'), 2000);
+  } catch (err) {
+    msg.textContent = 'Error: ' + err.message;
+    msg.style.cssText = 'padding:8px 12px;background:rgba(239,68,68,.1);color:#fca5a5;border-radius:8px;';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send Reset Email';
+  }
+};
+
+/* ─── Helpers ────────────────────────────────────── */
+function friendlyError(code) {
+  const map = {
+    'auth/email-already-in-use':   'That email is already registered.',
+    'auth/invalid-email':          'Please enter a valid email address.',
+    'auth/weak-password':          'Password is too weak (min 6 chars).',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+    'auth/operation-not-allowed':  'Email/password sign-in is not enabled in Firebase.',
+  };
+  return map[code] || null;
+}
+
+function setModalMsg(text, success = false) {
+  const el = document.getElementById('modalMsg');
+  el.textContent = text;
+  el.className   = success ? 'success' : '';
+}
+
+window.openModal  = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
+});
+
+/* ─── Toast ──────────────────────────────────────── */
+function showToast(msg, type = 'success') {
+  const icons = { success:'✅', danger:'❌', warning:'⚠️' };
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span style="flex:1">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 5000);
+}
+window.showToast = showToast;
+
+</script>
+</body>
+</html>

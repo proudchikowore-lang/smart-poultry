@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Poultry Monitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="aboutstyle.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container">
+      <h1>
+        <span>🐔</span>
+        <span class="animated-text">POULTRY HOUSE SMART MONITORING</span>
+      </h1>
+      <label class="theme-toggle">
+        <input type="checkbox" id="themeSwitch">
+        <span class="toggle-label">🌙</span>
+      </label>
+      <button id="logoutBtn" class="export-btn">Logout</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+
+      <!-- ── Hero ── -->
+      <div class="about-hero">
+        <div class="hero-icon">🐔</div>
+        <div>
+          <h2>Smart Poultry House Monitoring System</h2>
+          <p>
+            This system keeps a constant eye on your poultry house — 24 hours a day, 7 days a week.
+            Sensors inside the house measure temperature, humidity, light levels, and feed weight in
+            real time. All readings appear instantly on this dashboard so you can check on your flock
+            from anywhere — at the farm, at home, or on your phone.
+          </p>
+          <span class="version-badge">Version 1.0 &nbsp;·&nbsp; 2026</span>
+        </div>
+      </div>
+
+      <!-- ── Row 1: What you see | How to read it ── -->
+      <div class="about-grid">
+
+        <!-- Live readings explained -->
+        <div class="about-card">
+          <h3 class="section-title">📊 What the Dashboard Shows</h3>
+          <ul class="reading-list">
+            <li>
+              <span class="reading-icon">🌡</span>
+              <div class="reading-info">
+                <div class="reading-name">Temperature</div>
+                <div class="reading-range">Ideal: 18 °C – 32 °C (adjust for bird age)</div>
+                <div class="reading-desc">
+                  Shows the current air temperature inside the house. Young chicks need higher
+                  temperatures (around 32 °C at day one, dropping 2–3 °C each week).
+                </div>
+              </div>
+            </li>
+            <li>
+              <span class="reading-icon">💧</span>
+              <div class="reading-info">
+                <div class="reading-name">Humidity</div>
+                <div class="reading-range">Ideal: 50 % – 70 %</div>
+                <div class="reading-desc">
+                  Measures moisture in the air. Too low dries out the litter and irritates airways;
+                  too high promotes bacterial growth and wet litter problems.
+                </div>
+              </div>
+            </li>
+            <li>
+              <span class="reading-icon">💡</span>
+              <div class="reading-info">
+                <div class="reading-name">Light Level</div>
+                <div class="reading-range">Ideal: varies by growth stage</div>
+                <div class="reading-desc">
+                  Reports brightness inside the house as a percentage. Lighting affects bird
+                  activity, feed intake, and growth. The house LED switches on automatically
+                  when it gets dark.
+                </div>
+              </div>
+            </li>
+            <li>
+              <span class="reading-icon">🌾</span>
+              <div class="reading-info">
+                <div class="reading-name">Feed Level</div>
+                <div class="reading-range">Refill when level drops below your set threshold</div>
+                <div class="reading-desc">
+                  Weighs the feed in the hopper in grams. When feed runs low you will receive
+                  a warning alert so you can refill before birds go without.
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Alert system explained -->
+        <div class="about-card">
+          <h3 class="section-title">🔔 Understanding Alerts</h3>
+          <p style="font-size:13px;color:var(--text-muted,#aaa);margin-bottom:14px;line-height:1.6">
+            The system watches your sensor readings continuously and notifies you the moment
+            something goes outside the safe range you have set.
+          </p>
+          <ul class="alert-levels">
+            <li>
+              <span class="alert-dot dot-red"></span>
+              <div>
+                <strong>Critical (Red)</strong> — requires immediate action.
+                Example: temperature too high or too low. An alarm sound will play and the
+                alert is logged so you can track when it happened.
+              </div>
+            </li>
+            <li>
+              <span class="alert-dot dot-yellow"></span>
+              <div>
+                <strong>Warning (Yellow)</strong> — conditions are moving outside the safe zone.
+                Example: humidity rising or feed getting low. Act soon to prevent it becoming critical.
+              </div>
+            </li>
+            <li>
+              <span class="alert-dot dot-blue"></span>
+              <div>
+                <strong>Info (Blue)</strong> — a general update, no action needed.
+                Example: the house light was turned on or off automatically.
+              </div>
+            </li>
+          </ul>
+          <div class="tip-box">
+            <strong>💡 Tip:</strong> Go to <strong>Settings</strong> to adjust the minimum and maximum
+            values for each sensor. Set thresholds that match your bird age and breed for the most
+            relevant alerts.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Row 2: How to use each page ── -->
+      <div class="about-card full">
+        <h3 class="section-title">🗂 How to Use Each Page</h3>
+        <table class="pages-table">
+          <thead>
+            <tr><th>Page</th><th>What it does</th><th>When to use it</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="page-name">📊 Dashboard</td>
+              <td>
+                Shows live readings for all four sensors with colour-coded gauges and real-time charts that update every 10 seconds.
+                <div class="page-tip">The gauge colour changes from green → yellow → red as readings move further from the ideal range.</div>
+              </td>
+              <td>Your daily check-in. Open this first to get an instant snapshot of house conditions.</td>
+            </tr>
+            <tr>
+              <td class="page-name">📈 History</td>
+              <td>
+                Lets you pick a date range and view past sensor readings as charts and a detailed data table. You can also export the data to a spreadsheet (CSV).
+                <div class="page-tip">Use the date picker at the top to narrow down to a specific day or week.</div>
+              </td>
+              <td>Investigate a problem that happened earlier, review weekly trends, or prepare a report.</td>
+            </tr>
+            <tr>
+              <td class="page-name">🔔 Alerts</td>
+              <td>
+                A full log of every alert that has been triggered. You can filter by Critical, Warning, or Info, dismiss individual alerts, or clear all at once. The log can also be exported as a CSV file.
+                <div class="page-tip">Alerts are saved even if you close the browser and come back later.</div>
+              </td>
+              <td>Review what has happened while you were away, or check how often a particular condition occurs.</td>
+            </tr>
+            <tr>
+              <td class="page-name">⚙️ Settings</td>
+              <td>
+                Set the safe minimum and maximum values for temperature, humidity, light, and feed. The system will trigger alerts whenever a reading falls outside the range you define here.
+                <div class="page-tip">Changes take effect immediately — no restart needed.</div>
+              </td>
+              <td>When you move birds to a new growth stage, change the season, or want to tighten/relax alert sensitivity.</td>
+            </tr>
+            <tr>
+              <td class="page-name">ℹ️ About</td>
+              <td>This page — explains how the system works from your perspective as a user.</td>
+              <td>When you need a refresher on what each reading means or how alerts work.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+</br>
+      <!-- ── Row 3: Getting started | FAQ ── -->
+      <div class="about-grid">
+
+        <!-- Getting started steps -->
+        <div class="about-card">
+          <h3 class="section-title">🚀 Getting Started</h3>
+          <ul class="steps-list">
+            <li>
+              <span class="step-num">1</span>
+              <div>Log in with your authorised email and password on the login page. The dashboard will load automatically.</div>
+            </li>
+            <li>
+              <span class="step-num">2</span>
+              <div>Check the <strong>Dashboard</strong> — all four sensor cards should show live readings within a few seconds of the page loading.</div>
+            </li>
+            <li>
+              <span class="step-num">3</span>
+              <div>Go to <strong>Settings</strong> and confirm or adjust the alert thresholds to match your current flock age and breed requirements.</div>
+            </li>
+            <li>
+              <span class="step-num">4</span>
+              <div>Keep the <strong>Alerts</strong> page bookmarked so you can quickly check any notifications when you receive a sound alert.</div>
+            </li>
+            <li>
+              <span class="step-num">5</span>
+              <div>Use the <strong>History</strong> page at the end of each week to review trends and spot any patterns before they become problems.</div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- FAQ -->
+        <div class="about-card">
+          <h3 class="section-title">❓ Common Questions</h3>
+          <ul class="faq-list">
+            <li>
+              <div class="faq-q">The dashboard shows "--" instead of a number. What does that mean?</div>
+              <div class="faq-a">The system is waiting for a reading from the sensor hardware. Check that the equipment in the poultry house is powered on and connected to Wi-Fi. Readings should appear within 30 seconds.</div>
+            </li>
+            <li>
+              <div class="faq-q">I am getting too many alerts. How do I reduce them?</div>
+              <div class="faq-a">Go to <strong>Settings</strong> and widen the min/max range for the sensor that is triggering alerts. For example, if temperature warnings fire too often, raise the maximum or lower the minimum slightly.</div>
+            </li>
+            <li>
+              <div class="faq-q">Can I use this on my phone?</div>
+              <div class="faq-a">Yes. The dashboard is fully responsive and works on any smartphone or tablet browser. Simply open the same web address you use on your computer.</div>
+            </li>
+            <li>
+              <div class="faq-q">How often does the data update?</div>
+              <div class="faq-a">Sensor readings are sent from the hardware to the cloud every 10 seconds, so the dashboard is always close to real time.</div>
+            </li>
+            <li>
+              <div class="faq-q">How do I switch between dark and light mode?</div>
+              <div class="faq-a">Use the moon/sun toggle in the top-right corner of any page. Your preference is remembered across sessions.</div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer"><p>© 2026 Smart Poultry Dashboard</p></footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script type="module" src="auth-check.js"></script>
+  <script>
+    const themeSwitch = document.getElementById('themeSwitch');
+    function applyTheme(isLight) {
+      document.body.classList.toggle('light', isLight);
+      themeSwitch.checked = isLight;
+      document.querySelector('.toggle-label').textContent = isLight ? '☀️' : '🌙';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    applyTheme(localStorage.getItem('theme') === 'light');
+    themeSwitch.addEventListener('change', () => applyTheme(themeSwitch.checked));
+  </script>
+  <script src="nav.js"></script>
+</body>
+</html>

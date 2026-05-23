@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — Smart Poultry</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="adminstyle.css">
+</head>
+<body>
+  <!-- Decorative particles -->
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+  <div class="particle"></div>
+
+  <!-- Background image + overlay -->
+  <div class="bg-overlay"></div>
+
+  <div class="card">
+    <div class="card-inner">
+      <div class="admin-badge"><span class="dot"></span> Admin Access</div>
+      
+      <h1 class="tagline">🔐 ADMINSTRATOR PORTAL</h1>
+
+      <div class="field-group">
+        <div class="field-wrap">
+          <label for="email">Admin Email</label>
+          <input type="email" id="email" placeholder="admin@smartpoultry.com" autocomplete="email" required />
+        </div>
+        <div class="field-wrap">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter admin password"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') adminLogin()"
+            required
+          />
+        </div>
+      </div>
+
+      <button class="enter-btn" id="loginBtn" onclick="adminLogin()">Sign In as Administrator</button>
+      <p id="errorMsg"></p>
+
+      <div class="divider"><hr /><span>or</span><hr /></div>
+
+      <div style="margin-top:-6px; margin-bottom:10px; text-align:center;">
+        <a class="back-link" style="margin-top:0; color:brown; display:inline;" href="reset-password.html">Forgot password?</a>
+      </div>
+
+      <a class="back-link" style=" color:brown;" href="index.html">← Back to user login</a>
+      <p class="login-footer">Access restricted to authorised administrators only</p>
+    </div>
+  </div>
+
+  <script type="module" src="admin-auth.js"></script>
+
+  <style>
+    body {
+      background: url('broiler.jpeg') center / cover no-repeat fixed;
+      position: relative;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: -1;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</body>
+</html>
+
