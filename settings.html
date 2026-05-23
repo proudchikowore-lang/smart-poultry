@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Poultry Monitor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ══════════════════════════════
+       2-column card grid
+       Row 1: Thresholds | Calibration
+       Row 2: Device Status | Preferences
+    ══════════════════════════════ */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 700px) {
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+
+    .settings-card {
+     
+      border-radius: 14px;
+      padding: 22px 24px;
+      align-self: start;
+    }
+    .settings-card h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border, #333);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted, #3427ec);
+      margin: 16px 0 8px;
+    }
+    .section-label:first-of-type { margin-top: 0; }
+
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .range-row label {
+      font-size: 12px;
+      color: var(--text-muted, #aaa);
+      width: 90px;
+    }
+    .range-row input[type="number"] {
+      width: 76px;
+      background: var(--input-bg, #9595af);
+      color: var(--text, #eee);
+      border: 1px solid var(--border, #444);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-family: 'Poppins', sans-serif;
+      text-align: right;
+    }
+    .range-row input:focus { outline: none; border-color: #7c7cff; }
+    .range-sep { font-size: 12px; color: var(--text-muted, #aaa); }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+    .field-row label {
+      font-size: 13px;
+      color: var(--text-muted, #aaa);
+      flex: 1;
+    }
+    .field-row input[type="number"],
+    .field-row input[type="text"] {
+      width: 120px;
+      background: var(--input-bg, #9595af);
+      color: var(--text, #eee);
+      border: 3px solid var(--border, #444);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: 'Poppins', sans-serif;
+      text-align: right;
+    }
+    .field-row input:focus { outline: none; border-color: #7c7cff; }
+    .field-hint {
+      font-size: 11px;
+      color: var(--text-muted, #777);
+      margin: -6px 0 12px;
+      line-height: 1.5;
+    }
+
+    .save-row {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .save-btn {
+      background: #7c7cff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .save-btn:hover { background: #5a5aff; }
+    .reset-btn {
+      background: transparent;
+      color: var(--text-muted, #aaa);
+      border: 1px solid var(--border, #444);
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* ── Device status ── */
+    .device-status { display: flex; flex-direction: column; }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border, #222);
+      gap: 12px;
+    }
+    .status-row:last-child { border-bottom: none; }
+    .status-row .lbl { color: var(--text-muted, #aaa); flex: 1; }
+    .status-row .val { font-weight: 500; text-align: right; }
+    .online  { color: #00c864; }
+    .offline { color: #ff4d4d; }
+
+    /* ── Preferences ── */
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--text-muted, #aaa);
+      cursor: pointer;
+    }
+    .check-row input[type="checkbox"] {
+      accent-color: #7c7cff;
+      width: 15px;
+      height: 15px;
+    }
+
+    .live-val {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ff9933;
+    }
+
+    .toast-inline {
+      display: none;
+      background: rgba(0,200,100,0.12);
+      color: #00c864;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-container">
+      <h1>
+    <span>🐔</span>
+    <span class="animated-text">POULTRY HOUSE SMART MONITORING</span>
+</h1>
+      <label class="theme-toggle">
+        <input type="checkbox" id="themeSwitch">
+        <span class="toggle-label">🌙</span>
+      </label>
+      <button id="logoutBtn" class="export-btn">Logout</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+
+      <div class="settings-grid">
+
+        <!-- ══════════════════════════
+             Row 1 Col 1 — Thresholds
+        ══════════════════════════ -->
+        <div class="settings-card">
+          <h3>⚠️ Alert Thresholds</h3>
+
+          <div class="section-label">Temperature (°C)</div>
+          <div class="range-row">
+            <label for="tempMin">Min</label>
+<input type="number" id="tempMin" min="-50" max="100" step="0.1">
+            <span class="range-sep">—</span>
+            <label for="tempMax" style="width:30px;text-align:center">Max</label>
+            <input type="number" id="tempMax" min="-50" max="100" step="0.1">
+          </div>
+
+          <div class="section-label">Humidity (%)</div>
+          <div class="range-row">
+            <label for="humMin">Min</label>
+<input type="number" id="humMin" min="0" max="100" step="0.1">
+            <span class="range-sep">—</span>
+            <label for="humMax" style="width:30px;text-align:center">Max</label>
+            <input type="number" id="humMax" min="0" max="100" step="0.1">
+          </div>
+
+          <div class="section-label">Light Brightness (%)</div>
+          <div class="range-row">
+            <label for="lightMin">Min</label>
+            <input type="number" id="lightMin" min="0" max="100">
+            <span class="range-sep">—</span>
+            <label for="lightMax" style="width:30px;text-align:center">Max</label>
+            <input type="number" id="lightMax" min="0" max="100">
+          </div>
+
+<div class="section-label">Feed Weight</div>
+          <div class="range-row">
+            <label for="feedMin">Min</label>
+            <input type="number" id="feedMin" min="10" max="100">
+            <span class="range-sep">—</span>
+            <label for="feedMax" style="width:30px;text-align:center">Max</label>
+            <input type="number" id="feedMax" min="10" max="100">
+          </div>
+
+          <div class="section-label">Water Level (%)</div>
+          <div class="range-row">
+            <label for="waterMin">Min</label>
+            <input type="number" id="waterMin" min="0" max="100">
+            <span class="range-sep">—</span>
+            <label for="waterMax" style="width:30px;text-align:center">Max</label>
+            <input type="number" id="waterMax" min="0" max="100">
+          </div>          
+
+
+
+          <div class="save-row">
+            <button class="reset-btn" onclick="resetThresholds()">Reset defaults</button>
+            <button class="save-btn"  onclick="saveThresholds()">Save</button>
+          </div>
+          <div class="toast-inline" id="toastThresh">✅ Thresholds saved</div>
+        </div>
+
+        <!-- ══════════════════════════
+             Row 1 Col 2 — Calibration
+        ══════════════════════════ -->
+        <div class="settings-card">
+          <h3>⚖️ Scale Calibration</h3>
+          <p style="font-size:12px;color:var(--text-muted,#aaa);margin-bottom:16px;line-height:1.6">
+            Adjust the calibration factor to match a known reference weight.
+            Copy the updated value into the firmware and re-upload.
+          </p>
+
+          <div class="section-label">Factor</div>
+          <div class="field-row">
+            <label>Calibration factor</label>
+<input type="number" id="calFactor" value="2280" min="1" step="10">
+          </div>
+          <p class="field-hint">Default: 2280 — increase if readings are too low, decrease if too high</p>
+
+          <div class="field-row">
+            <label>Known reference weight (g)</label>
+<input type="number" id="refWeight" placeholder="e.g. 500" min="1">
+          </div>
+          <p class="field-hint">Place this weight on the scale, observe the reading, then adjust the factor above</p>
+
+          <div class="section-label">Live reading</div>
+          <div class="field-row">
+            <label>Current weight from Firebase</label>
+            <span class="live-val" id="liveWeight">-- g</span>
+          </div>
+
+          <div class="save-row">
+            <button class="save-btn" onclick="saveCalibration()">📋 Copy to clipboard</button>
+          </div>
+          <div class="toast-inline" id="toastCal">✅ Copied — paste into firmware &amp; re-upload</div>
+        </div>
+
+        <!-- ══════════════════════════
+             Row 2 Col 1 — Device Status
+        ══════════════════════════ -->
+        <div class="settings-card">
+          <h3>📡 Device Status</h3>
+          <div class="device-status">
+            <div class="status-row">
+              <span class="lbl">ESP32 connection</span>
+              <span class="val" id="deviceStatus">Checking...</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">Last data received</span>
+              <span class="val" id="lastSeen">--</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">Temperature (DHT22)</span>
+              <span class="val" id="dhtStatus">--</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">Humidity (DHT22)</span>
+              <span class="val" id="humStatus">--</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">Weight (HX711)</span>
+              <span class="val" id="hx711Status">--</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">Light (MH-Sensor)</span>
+              <span class="val" id="lightStatus">--</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">LED state</span>
+              <span class="val" id="ledStatusVal">--</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">Push interval</span>
+              <span class="val">Every 10 seconds</span>
+            </div>
+            <div class="status-row">
+              <span class="lbl">Firebase database</span>
+              <span class="val" style="font-size:11px">poutry-6dd09-default-rtdb</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════
+             Row 2 Col 2 — Preferences
+        ══════════════════════════ -->
+        <div class="settings-card">
+          <h3>🎨 Dashboard Preferences</h3>
+
+          <div class="section-label">Farm identity</div>
+          <div class="field-row">
+            <label>Farm display name</label>
+            <input type="text" id="farmName" placeholder="My Poultry House" style="text-align:left">
+          </div>
+
+          <div class="section-label">Chart settings</div>
+          <div class="field-row">
+            <label>Max data points shown</label>
+            <input type="number" id="maxPoints" min="5" max="100" value="20">
+          </div>
+
+          <div class="section-label">Notifications</div>
+          <label class="check-row">
+            <input type="checkbox" id="soundEnabled" checked>
+            Play alarm sound on critical alerts
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="autoExport">
+            Auto-export data daily (CSV)
+          </label>
+
+          <div class="section-label">Theme</div>
+          <label class="check-row">
+            <input type="checkbox" id="themeCheck" onchange="applyTheme(this.checked)">
+            Light mode
+          </label>
+
+          <div class="save-row">
+            <button class="save-btn" onclick="savePreferences()">Save preferences</button>
+          </div>
+          <div class="toast-inline" id="toastPref">✅ Preferences saved</div>
+        </div>
+
+      </div><!-- /.settings-grid -->
+    </div><br>
+  </main>
+<footer class="site-footer"><p>© 2026 Smart Poultry Dashboard</p></footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script type="module" src="auth-check.js"></script>
+  <script>
+    const firebaseConfig = { databaseURL: "https://poutry-6dd09-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ── Theme ──
+    const themeSwitch = document.getElementById('themeSwitch');
+    function applyTheme(isLight) {
+      document.body.classList.toggle('light', isLight);
+      themeSwitch.checked = isLight;
+      document.querySelector('.toggle-label').textContent = isLight ? '☀️' : '🌙';
+      const tc = document.getElementById('themeCheck');
+      if (tc) tc.checked = isLight;
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+    applyTheme(localStorage.getItem('theme') === 'light');
+    themeSwitch.addEventListener('change', () => applyTheme(themeSwitch.checked));
+
+// ── Thresholds ──
+    const defaultThresholds = {
+      tempMin: 15, tempMax: 35,
+      humMin:  40, humMax:  80,
+      lightMin: 20, lightMax: 100,
+      feedMin: 10, feedMax: 100,
+      waterMin: 20, waterMax: 100
+    };
+
+function loadThresholds() {
+      const t = JSON.parse(localStorage.getItem('thresholds') || 'null') || defaultThresholds;
+      document.getElementById('tempMin').value  = t.tempMin;
+      document.getElementById('tempMax').value  = t.tempMax;
+      document.getElementById('humMin').value   = t.humMin;
+      document.getElementById('humMax').value   = t.humMax;
+      document.getElementById('lightMin').value = t.lightMin;
+      document.getElementById('lightMax').value = t.lightMax;
+      document.getElementById('feedMin').value = t.feedMin;
+      document.getElementById('feedMax').value = t.feedMax;
+      document.getElementById('waterMin').value = t.waterMin;
+      document.getElementById('waterMax').value = t.waterMax;
+    }
+    loadThresholds();
+
+function saveThresholds() {
+      const t = {
+        tempMin:  parseFloat(document.getElementById('tempMin').value),
+        tempMax:  parseFloat(document.getElementById('tempMax').value),
+        humMin:   parseFloat(document.getElementById('humMin').value),
+        humMax:   parseFloat(document.getElementById('humMax').value),
+        lightMin: parseFloat(document.getElementById('lightMin').value),
+        lightMax: parseFloat(document.getElementById('lightMax').value),
+        feedMin:  parseFloat(document.getElementById('feedMin').value),
+        feedMax:  parseFloat(document.getElementById('feedMax').value),
+        waterMin: parseFloat(document.getElementById('waterMin').value),
+        waterMax: parseFloat(document.getElementById('waterMax').value),
+      };
+      localStorage.setItem('thresholds', JSON.stringify(t));
+      showToast('toastThresh');
+    }
+
+    function resetThresholds() {
+      localStorage.removeItem('thresholds');
+      loadThresholds();
+      showToast('toastThresh');
+    }
+
+    // ── Calibration ──
+    function saveCalibration() {
+      const factor = document.getElementById('calFactor').value;
+      const line   = `const float CALIBRATION_FACTOR = ${factor};`;
+      navigator.clipboard.writeText(line)
+        .then(() => showToast('toastCal'))
+        .catch(() => prompt('Copy this line into your firmware:', line));
+    }
+
+    // ── Preferences ──
+    function loadPreferences() {
+      const p = JSON.parse(localStorage.getItem('prefs') || '{}');
+      if (p.farmName    !== undefined) document.getElementById('farmName').value       = p.farmName;
+      if (p.maxPoints   !== undefined) document.getElementById('maxPoints').value      = p.maxPoints;
+      if (p.soundEnabled!== undefined) document.getElementById('soundEnabled').checked = p.soundEnabled;
+      if (p.autoExport  !== undefined) document.getElementById('autoExport').checked   = p.autoExport;
+    }
+    loadPreferences();
+
+    function savePreferences() {
+      const p = {
+        farmName:     document.getElementById('farmName').value,
+        maxPoints:    parseInt(document.getElementById('maxPoints').value),
+        soundEnabled: document.getElementById('soundEnabled').checked,
+        autoExport:   document.getElementById('autoExport').checked,
+      };
+      localStorage.setItem('prefs', JSON.stringify(p));
+      if (p.farmName) document.querySelector('h1').textContent = '🐔 ' + p.farmName;
+      showToast('toastPref');
+    }
+
+    // ── Toast helper ──
+    function showToast(id) {
+      const el = document.getElementById(id);
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    // ── Device status via Firebase ──
+    let lastSeenTs = null;
+
+    function checkOnlineStatus() {
+      const el = document.getElementById('deviceStatus');
+      if (!lastSeenTs) { el.textContent = 'Waiting for data...'; el.className = 'val'; return; }
+      const diff = Math.floor((Date.now() - lastSeenTs) / 1000);
+      if (diff < 30) {
+        el.textContent = '● Online'; el.className = 'val online';
+      } else {
+        el.textContent = `⚠ Last seen ${diff}s ago`; el.className = 'val offline';
+      }
+    }
+
+    db.ref('/data/temperature').limitToLast(1).on('value', snap => {
+      const val = snap.val(); if (!val) return;
+      lastSeenTs = Date.now();
+      const v = parseFloat(Object.values(val)[0]);
+      document.getElementById('dhtStatus').textContent = `${v.toFixed(1)} °C — OK`;
+      document.getElementById('dhtStatus').className   = 'val online';
+      document.getElementById('lastSeen').textContent  = new Date().toLocaleTimeString();
+      checkOnlineStatus();
+    });
+
+    db.ref('/data/humidity').limitToLast(1).on('value', snap => {
+      const val = snap.val(); if (!val) return;
+      const v = parseFloat(Object.values(val)[0]);
+      document.getElementById('humStatus').textContent = `${v.toFixed(1)} % — OK`;
+      document.getElementById('humStatus').className   = 'val online';
+    });
+
+    db.ref('/data/light').limitToLast(1).on('value', snap => {
+      const val = snap.val(); if (!val) return;
+      const v = parseInt(Object.values(val)[0], 10);
+      document.getElementById('lightStatus').textContent = `${v}% brightness — OK`;
+      document.getElementById('lightStatus').className   = 'val online';
+    });
+
+    db.ref('/data/weight').limitToLast(1).on('value', snap => {
+      const val = snap.val(); if (!val) return;
+      const v = parseFloat(Object.values(val)[0]);
+      document.getElementById('hx711Status').textContent = `${v.toFixed(1)} g — OK`;
+      document.getElementById('hx711Status').className   = 'val online';
+      document.getElementById('liveWeight').textContent  = v.toFixed(1) + ' g';
+    });
+   
+    db.ref('/data/led_status').on('value', snap => {
+      const v = snap.val();
+      if (v !== null) {
+        document.getElementById('ledStatusVal').textContent = v ? 'ON' : 'OFF';
+        document.getElementById('ledStatusVal').className   = v ? 'val online' : 'val';
+      }
+    });
+
+    setInterval(checkOnlineStatus, 5000);
+  </script>
+  <script src="nav.js"></script>
+</body>
+</html>
